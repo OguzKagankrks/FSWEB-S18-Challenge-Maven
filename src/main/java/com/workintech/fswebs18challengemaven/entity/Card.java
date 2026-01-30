@@ -7,46 +7,44 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Entity
-@Table(name = "Card", schema = "public")
+@Table(name = "card", schema = "public")
 public class Card {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Long  id;
+    private Long id;
 
-    @Column(name = "value")
-    private Integer  value;
+    private Integer value;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "type")
     private Type type;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "color")
     private Color color;
 
+    @PrePersist
+    @PreUpdate
+    private void normalizeRules() {
 
-    public Card(Long id, Integer value, Type type, Color color) {
-        this.id = id;
-        type_value_check(value,type,color);
-    }
-
-    private void type_value_check(Integer value, Type type, Color color) {
         if (type == Type.JOKER) {
             this.value = null;
             this.color = null;
-            this.type = type;
-        } else {
-            if (value != null) {
-                this.value = value;
-                this.color = color;
-                this.type = null;
-            } else {
-                this.value = null;
-                this.color = color;
-                this.type = type;
-            }
+            return;
+        }
+
+
+        if (type != null && value != null) {
+            throw new IllegalStateException("Card cannot have both type and value");
+        }
+
+
+        if (type == null && value == null) {
+            throw new IllegalStateException("Card must have either type or value");
+        }
+
+
+        if (color == null) {
+            throw new IllegalStateException("Color is required for non-JOKER cards");
         }
     }
-
 }
