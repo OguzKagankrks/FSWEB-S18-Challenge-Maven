@@ -29,11 +29,18 @@ public class CardRepositoryImpl implements CardRepository {
     }
 
     @Override
-    public List<Card> findByColor(Color color) {
+    public List<Card> findByColor(String color) {
+        final Color enumColor;
+        try {
+            enumColor = Color.valueOf(color.toUpperCase());
+        } catch (Exception e) {
+            throw new CardException("Color not found", HttpStatus.NOT_FOUND);
+        }
+
         TypedQuery<Card> query = entityManager.createQuery(
                 "SELECT c FROM Card c WHERE c.color = :color", Card.class
         );
-        query.setParameter("color", color);
+        query.setParameter("color", enumColor);
 
         List<Card> list = query.getResultList();
         if (list.isEmpty()) {
@@ -58,11 +65,19 @@ public class CardRepositoryImpl implements CardRepository {
     }
 
     @Override
-    public List<Card> findByType(Type type) {
+    public List<Card> findByType(String type) {
+        final Type enumType;
+        try {
+            enumType = Type.valueOf(type.toUpperCase());
+        } catch (Exception e) {
+            throw new CardException("Type not found", HttpStatus.NOT_FOUND);
+        }
+
         TypedQuery<Card> query = entityManager.createQuery(
                 "SELECT c FROM Card c WHERE c.type = :type", Card.class
         );
-        query.setParameter("type", type);
+        query.setParameter("type", enumType);
+
         return query.getResultList();
     }
 
@@ -74,18 +89,9 @@ public class CardRepositoryImpl implements CardRepository {
     @Override
     @Transactional
     public Card update(Card card) {
-        if (card == null) {
-            throw new CardException("Card is null", HttpStatus.BAD_REQUEST);
-        }
         if (card.getId() == null) {
             throw new CardException("Id is required for update", HttpStatus.BAD_REQUEST);
         }
-
-        Card existing = findById(card.getId());
-        if (existing == null) {
-            throw new CardException("Card not found", HttpStatus.NOT_FOUND);
-        }
-
         return entityManager.merge(card);
     }
 
